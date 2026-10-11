@@ -9,6 +9,38 @@ if [ -n "${FLOWW_DB_CA_CERT_B64:-}" ]; then
     unset FLOWW_DB_CA_CERT_B64
 fi
 
+# Native Neon integration injects separate connection parameters without exposing
+# credentials in source. Use the pooled endpoint for queries and the direct
+# endpoint for Flyway's session-bound locks and migrations.
+if [ -n "${PGHOST:-}" ]; then
+    : "${PGHOST_UNPOOLED:?Direct database host is required for migrations}"
+    : "${PGUSER:?Database user is required}"
+    : "${PGDATABASE:?Database name is required}"
+    : "${PGPASSWORD:?Database password is required}"
+    case "$PGHOST" in
+        *-pooler.*.neon.tech) ;;
+        *) echo 'Expected a Neon pooled database host' >&2; exit 1 ;;
+    esac
+    case "$PGHOST_UNPOOLED" in
+        *-pooler.*) echo 'Flyway requires a direct Neon host' >&2; exit 1 ;;
+        *.neon.tech) ;;
+        *) echo 'Expected a Neon direct database host' >&2; exit 1 ;;
+    esac
+    case "$PGDATABASE" in
+        ''|*[!a-zA-Z0-9_-]*) echo 'Unsupported database name' >&2; exit 1 ;;
+    esac
+    tls_options='sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory'
+    export FLOWW_DB_URL="jdbc:postgresql://${PGHOST}:5432/${PGDATABASE}?${tls_options}&prepareThreshold=0"
+    export FLOWW_DB_USER="$PGUSER"
+    export FLOWW_DB_PASSWORD="$PGPASSWORD"
+    export SPRING_DATASOURCE_URL="$FLOWW_DB_URL"
+    export SPRING_FLYWAY_URL="jdbc:postgresql://${PGHOST_UNPOOLED}:5432/${PGDATABASE}?${tls_options}"
+    export SPRING_FLYWAY_USER="$PGUSER"
+    export SPRING_FLYWAY_PASSWORD="$PGPASSWORD"
+    unset tls_options
+    exec java -XX:TieredStopAtLevel=1 -jar /app/server.jar
+fi
+
 # Serverless app instances must not pin a session-mode Supabase connection.
 # Keep Flyway on the existing session endpoint, where its migrations and locks
 # retain session semantics; use the transaction pooler only for app queries.
