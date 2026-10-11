@@ -1,3 +1,15 @@
+## Fork purpose / 포크 목적
+
+This repository is a personal fork of [web5five/Floww_Server](https://github.com/web5five/Floww_Server), created for server modification and an independent deployment. Backend changes, including separating login identity from the user profile, will be developed here.
+
+이 저장소는 서버 수정과 별도 배포를 위해 생성한 `web5five/Floww_Server`의 개인 포크입니다. 로그인 인증 정보와 사용자 프로필을 분리하는 작업을 포함한 백엔드 변경을 이 저장소에서 진행합니다.
+
+Fork deployment status: pending. Existing upstream documentation and deployment evidence describe the original repository; they do not verify this fork's deployment.
+
+포크 배포 상태: 준비 중. 기존 문서와 배포 증거는 원본 저장소 기준이며 이 포크의 배포를 검증한 자료가 아닙니다.
+
+---
+
 <img width="1672" height="941" alt="ChatGPT Image 2026년 9월 30일 오전 01_56_33" src="https://github.com/user-attachments/assets/30f40a6d-aee6-46ab-864c-a049feea7716" />
 
 <div align="center">
